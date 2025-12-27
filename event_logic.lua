@@ -8,31 +8,28 @@ local EventModule = {
     }
 }
 
--- FUNGSI UNTUK MENDAPATKAN WAKTU WIB YANG AKURAT
-function EventModule.getWIBTime()
-    -- os.time() adalah waktu UTC universal
-    -- Kita tambah 25200 detik (7 jam * 3600 detik) untuk menjadi WIB
-    local wibSeconds = os.time() + 25200
-    return os.date("!*t", wibSeconds) -- Menggunakan format UTC (!) agar penambahan manual kita tidak kacau
+-- FUNGSI FIX WIB (GMT+7)
+function EventModule.getWIB()
+    -- os.time() adalah UTC detik. Tambah 7 jam (25200 detik)
+    local timestamp = os.time() + 25200
+    local t = os.date("!*t", timestamp) -- Tanda '!' memaksa format UTC agar tidak tabrakan dengan zona waktu server
+    return t
 end
 
 function EventModule.isIcemoonTime()
-    local d = EventModule.getWIBTime()
-    -- SYARAT: Jam Ganjil (1, 3, 5, 7, 9, 11, dst)
-    local isOddHour = (d.hour % 2 ~= 0)
-    -- SYARAT: Menit 01 sampai 30
-    local isTargetMinute = (d.min >= 1 and d.min <= 30)
-    
-    return isOddHour and isTargetMinute
+    local d = EventModule.getWIB()
+    -- Logika Anda: Jam Ganjil DAN Menit 01-30
+    local isOdd = (d.hour % 2 ~= 0)
+    local isMin = (d.min >= 1 and d.min <= 30)
+    return isOdd and isMin
 end
 
 function EventModule.StartLoop(StatusLabel, TimeLabel)
     task.spawn(function()
         while true do
-            -- Ambil data waktu WIB terbaru setiap detik
-            local d = EventModule.getWIBTime()
+            local d = EventModule.getWIB()
             
-            -- Update teks waktu di UI agar sama dengan jam HP Anda
+            -- Menampilkan jam di UI agar Anda bisa kroscek
             if TimeLabel then 
                 TimeLabel.Text = string.format("WIB: %02d:%02d:%02d", d.hour, d.min, d.sec) 
             end
@@ -40,34 +37,30 @@ function EventModule.StartLoop(StatusLabel, TimeLabel)
             if EventModule._G_Enabled then
                 local currentState = EventModule.isIcemoonTime()
                 
-                -- Logika Transisi (Teleport hanya saat status berubah)
+                -- Deteksi perubahan untuk Teleport (Smart Transition)
                 if currentState ~= EventModule.lastState then
                     local lp = game.Players.LocalPlayer
-                    local char = lp.Character
-                    local root = char and char:FindFirstChild("HumanoidRootPart")
+                    local root = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
                     
                     if root then
                         if currentState == true then
-                            -- Waktunya Event (Ganjil & Menit 1-30)
-                            if StatusLabel then StatusLabel.Text = "EVENT: TELEPORTING..." end
+                            -- Jika Jam Ganjil & Menit 1-30
+                            if StatusLabel then StatusLabel.Text = "EVENT: TP RANDOM" end
                             local randomCoord = EventModule.ICEMOON_COORDS[math.random(1, #EventModule.ICEMOON_COORDS)]
                             root.CFrame = CFrame.new(randomCoord + Vector3.new(0, 5, 0))
                         else
-                            -- Waktu Event Selesai (Menit > 30 atau Jam Genap)
-                            if StatusLabel then StatusLabel.Text = "OVER: GOING BACK..." end
+                            -- Jika sudah lewat menit 30 atau jam genap
+                            if StatusLabel then StatusLabel.Text = "OVER: TP BACK" end
                             root.CFrame = CFrame.new(EventModule.STANDBY_SPOT + Vector3.new(0, 5, 0))
                         end
                     end
                     EventModule.lastState = currentState
                 end
                 
-                -- Update Label Status di layar
+                -- Update Status
                 if StatusLabel then
-                    if currentState then 
-                        StatusLabel.Text = "STATUS: AT ICEMOON" 
-                    else 
-                        StatusLabel.Text = "STATUS: STANDBY" 
-                    end
+                    if currentState then StatusLabel.Text = "STATUS: AT ICEMOON" 
+                    else StatusLabel.Text = "STATUS: STANDBY" end
                 end
             end
             task.wait(1)
