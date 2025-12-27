@@ -19,7 +19,7 @@ function UI.Load(TeleportModule, EventModule)
     Stroke.Color = Color3.fromRGB(0, 255, 200)
     Stroke.Thickness = 2
 
-    -- TOMBOL CLOSE & MINIMIZE (ZIndex 100 agar selalu di atas)
+    -- TOMBOL CLOSE & MINIMIZE (ZINDEX TINGGI)
     local CloseBtn = Instance.new("TextButton", MainFrame)
     CloseBtn.Size = UDim2.new(0, 30, 0, 30); CloseBtn.Position = UDim2.new(1, -35, 0, 10)
     CloseBtn.Text = "X"; CloseBtn.Font = Enum.Font.GothamBold; CloseBtn.TextColor3 = Color3.new(1,1,1)
@@ -32,7 +32,7 @@ function UI.Load(TeleportModule, EventModule)
     MiniBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 200); MiniBtn.ZIndex = 100
     Instance.new("UICorner", MiniBtn).CornerRadius = UDim.new(1, 0)
 
-    -- TABS
+    -- NAVIGATION TABS
     local TabEv = Instance.new("TextButton", MainFrame)
     TabEv.Size = UDim2.new(0.5, -12, 0, 35); TabEv.Position = UDim2.new(0, 8, 0, 55)
     TabEv.Text = "AUTO EVENT"; TabEv.Font = Enum.Font.GothamBold; TabEv.TextColor3 = Color3.new(1,1,1)
@@ -45,24 +45,26 @@ function UI.Load(TeleportModule, EventModule)
     TabTp.BackgroundColor3 = Color3.fromRGB(45, 45, 45); TabTp.ZIndex = 10
     Instance.new("UICorner", TabTp)
 
-    -- CONTAINER UTAMA (ScrollingFrame Fix)
+    -- CONTENT SCROLLING FRAME (DENGAN AUTO CANVAS SIZE)
     local ContentFrame = Instance.new("ScrollingFrame", MainFrame)
     ContentFrame.Size = UDim2.new(1, -16, 1, -110)
     ContentFrame.Position = UDim2.new(0, 8, 0, 100)
     ContentFrame.BackgroundTransparency = 1
-    ContentFrame.ScrollBarThickness = 2
-    ContentFrame.CanvasSize = UDim2.new(0, 0, 2, 0) -- Memberi ruang scroll
+    ContentFrame.ScrollBarThickness = 3
+    ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- Akan otomatis dihitung
+    ContentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y -- FIX SCROLL GAK BISA TURUN
     ContentFrame.ZIndex = 5
     
     local UIList = Instance.new("UIListLayout", ContentFrame)
     UIList.HorizontalAlignment = "Center"
     UIList.Padding = UDim.new(0, 6)
+    UIList.SortOrder = Enum.SortOrder.LayoutOrder -- Agar tombol tersusun rapi
 
-    -- FUNGSI TAMPILKAN EVENT PAGE
+    -- TAMPILAN HALAMAN AUTO EVENT
     local function showEventPage()
         ContentFrame:ClearAllChildren()
-        Instance.new("UIListLayout", ContentFrame).HorizontalAlignment = "Center"
-        ContentFrame.UIListLayout.Padding = UDim.new(0, 8)
+        local list = Instance.new("UIListLayout", ContentFrame)
+        list.HorizontalAlignment = "Center"; list.Padding = UDim.new(0, 8)
 
         local StatusLabel = Instance.new("TextLabel", ContentFrame)
         StatusLabel.Size = UDim2.new(1, 0, 0, 40); StatusLabel.Text = "SYSTEM READY"
@@ -72,7 +74,7 @@ function UI.Load(TeleportModule, EventModule)
         local TimeLabel = Instance.new("TextLabel", ContentFrame)
         TimeLabel.Size = UDim2.new(1, 0, 0, 30); TimeLabel.Text = "00:00:00"
         TimeLabel.Font = Enum.Font.GothamBold; TimeLabel.TextColor3 = Color3.fromRGB(0, 255, 200)
-        TimeLabel.BackgroundTransparency = 1; TimeLabel.Name = "TimerDisplay"
+        TimeLabel.BackgroundTransparency = 1
 
         local ToggleBtn = Instance.new("TextButton", ContentFrame)
         ToggleBtn.Size = UDim2.new(0, 210, 0, 50); ToggleBtn.Text = EventModule._G_Enabled and "STOP AUTO" or "START SMART AUTO"
@@ -89,11 +91,11 @@ function UI.Load(TeleportModule, EventModule)
         EventModule.StartLoop(StatusLabel, TimeLabel)
     end
 
-    -- FUNGSI TAMPILKAN TELEPORT PAGE
+    -- TAMPILAN HALAMAN TELEPORT (FIXED)
     local function showTeleportPage()
         ContentFrame:ClearAllChildren()
-        Instance.new("UIListLayout", ContentFrame).HorizontalAlignment = "Center"
-        ContentFrame.UIListLayout.Padding = UDim.new(0, 6)
+        local list = Instance.new("UIListLayout", ContentFrame)
+        list.HorizontalAlignment = "Center"; list.Padding = UDim.new(0, 6)
 
         for name, data in pairs(TeleportModule.ISLANDS) do
             local btn = Instance.new("TextButton", ContentFrame)
@@ -104,21 +106,24 @@ function UI.Load(TeleportModule, EventModule)
             
             btn.MouseButton1Click:Connect(function()
                 ContentFrame:ClearAllChildren()
-                Instance.new("UIListLayout", ContentFrame).HorizontalAlignment = "Center"
-                ContentFrame.UIListLayout.Padding = UDim.new(0, 6)
+                local list2 = Instance.new("UIListLayout", ContentFrame)
+                list2.HorizontalAlignment = "Center"; list2.Padding = UDim.new(0, 6)
+                list2.SortOrder = Enum.SortOrder.LayoutOrder
 
+                -- Tombol KEMBALI (Dipaksa LayoutOrder -1 agar selalu di atas)
                 local back = Instance.new("TextButton", ContentFrame)
-                back.Size = UDim2.new(0, 210, 0, 35); back.Text = "← KEMBALI"
+                back.Size = UDim2.new(0, 210, 0, 40); back.Text = "← KEMBALI"
                 back.Font = Enum.Font.GothamBold; back.TextColor3 = Color3.new(1,1,1)
-                back.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+                back.BackgroundColor3 = Color3.fromRGB(150, 0, 0); back.LayoutOrder = -1
                 Instance.new("UICorner", back)
                 back.MouseButton1Click:Connect(showTeleportPage)
 
-                for _, s in pairs(data) do
+                -- Daftar Spot (Akan muncul di bawah tombol KEMBALI)
+                for i, s in pairs(data) do
                     local sb = Instance.new("TextButton", ContentFrame)
                     sb.Size = UDim2.new(0, 210, 0, 40); sb.Text = s[1]:upper()
                     sb.Font = Enum.Font.GothamBold; sb.TextColor3 = Color3.new(1,1,1)
-                    sb.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                    sb.BackgroundColor3 = Color3.fromRGB(55, 55, 55); sb.LayoutOrder = i
                     Instance.new("UICorner", sb)
                     sb.MouseButton1Click:Connect(function() TeleportModule.To(s[2]) end)
                 end
@@ -126,11 +131,11 @@ function UI.Load(TeleportModule, EventModule)
         end
     end
 
-    -- LOGIKA MINIMIZE (S CIRCLE)
+    -- LOGIKA MINIMIZE (S CIRCLE HITAM)
     local FloatingS = Instance.new("TextButton", ScreenGui)
-    FloatingS.Size = UDim2.new(0, 45, 0, 45); FloatingS.Position = UDim2.new(0, 20, 0.5, -22)
+    FloatingS.Size = UDim2.new(0, 50, 0, 50); FloatingS.Position = UDim2.new(0, 20, 0.5, -25)
     FloatingS.BackgroundColor3 = Color3.fromRGB(10, 10, 10); FloatingS.Text = "S"
-    FloatingS.Font = Enum.Font.GothamBold; FloatingS.TextColor3 = Color3.fromRGB(0, 255, 200)
+    FloatingS.Font = Enum.Font.GothamBold; FloatingS.TextColor3 = Color3.fromRGB(0, 255, 200); FloatingS.TextSize = 24
     FloatingS.Visible = false; FloatingS.Draggable = true; Instance.new("UICorner", FloatingS).CornerRadius = UDim.new(1, 0)
     local SStroke = Instance.new("UIStroke", FloatingS); SStroke.Color = Color3.fromRGB(0, 255, 200); SStroke.Thickness = 2
 
@@ -150,7 +155,7 @@ function UI.Load(TeleportModule, EventModule)
         showTeleportPage() 
     end)
 
-    -- LOAD AWAL
+    -- JALANKAN AWAL
     showEventPage()
 end
 
