@@ -1,80 +1,95 @@
 local UI = {}
 
 function UI.Load(TeleportModule, EventModule)
-    local sg = Instance.new("ScreenGui", game.CoreGui)
-    local mf = Instance.new("Frame", sg)
-    mf.Size, mf.Position = UDim2.new(0, 200, 0, 250), UDim2.new(0.5, -100, 0.4, 0)
-    mf.BackgroundColor3, mf.Active, mf.Draggable = Color3.fromRGB(20, 20, 20), true, true
-    Instance.new("UICorner", mf)
+    local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+    local MainFrame = Instance.new("Frame", ScreenGui)
+    
+    -- Ukuran disesuaikan agar muat menu Teleport dan Smart Auto
+    MainFrame.Size = UDim2.new(0, 230, 0, 320)
+    MainFrame.Position = UDim2.new(0.5, -115, 0.3, 0)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    MainFrame.Active = true
+    MainFrame.Draggable = true
+    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+    
+    -- Tombol Close (X) dan Minimize (S)
+    local CloseBtn = Instance.new("TextButton", MainFrame)
+    CloseBtn.Size = UDim2.new(0, 25, 0, 25); CloseBtn.Position = UDim2.new(1, -30, 0, 5)
+    CloseBtn.Text = "X"; CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    Instance.new("UICorner", CloseBtn); CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 
-    -- Tombol Close & Mini (S)
-    local close = Instance.new("TextButton", mf)
-    close.Size, close.Position, close.Text = UDim2.new(0, 25, 0, 25), UDim2.new(1, -30, 0, 5), "X"
-    close.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    close.MouseButton1Click:Connect(function() sg:Destroy() end)
+    local MiniBtn = Instance.new("TextButton", MainFrame)
+    MiniBtn.Size = UDim2.new(0, 25, 0, 25); MiniBtn.Position = UDim2.new(1, -60, 0, 5)
+    MiniBtn.Text = "S"; MiniBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 200)
+    local RC = Instance.new("UICorner", MiniBtn); RC.CornerRadius = UDim.new(1, 0)
 
-    -- TAB NAVIGATION
-    local tEv = Instance.new("TextButton", mf)
-    tEv.Size, tEv.Position, tEv.Text = UDim2.new(0.5, -5, 0, 30), UDim2.new(0, 3, 0, 35), "EVENT"
-    tEv.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    -- SISTEM TAB (Agar menu tidak hilang)
+    local TabEvent = Instance.new("TextButton", MainFrame)
+    TabEvent.Size = UDim2.new(0.5, -7, 0, 30); TabEvent.Position = UDim2.new(0, 5, 0, 40)
+    TabEvent.Text = "SMART AUTO"; TabEvent.BackgroundColor3 = Color3.fromRGB(30, 100, 200)
+    Instance.new("UICorner", TabEvent)
 
-    local tTp = Instance.new("TextButton", mf)
-    tTp.Size, tTp.Position, tTp.Text = UDim2.new(0.5, -5, 0, 30), UDim2.new(0.5, 2, 0, 35), "TELEPORT"
-    tTp.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    local TabTp = Instance.new("TextButton", MainFrame)
+    TabTp.Size = UDim2.new(0.5, -7, 0, 30); TabTp.Position = UDim2.new(0.5, 2, 0, 40)
+    TabTp.Text = "TELEPORT"; TabTp.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    Instance.new("UICorner", TabTp)
 
-    -- PAGES
-    local pEv = Instance.new("Frame", mf)
-    pEv.Size, pEv.Position, pEv.Visible = UDim2.new(1, -10, 1, -75), UDim2.new(0, 5, 0, 70), true
-    pEv.BackgroundTransparency = 1
+    -- HALAMAN SMART AUTO
+    local PageEvent = Instance.new("Frame", MainFrame)
+    PageEvent.Size = UDim2.new(1, -10, 1, -85); PageEvent.Position = UDim2.new(0, 5, 0, 80)
+    PageEvent.BackgroundTransparency = 1; PageEvent.Visible = true
 
-    local pTp = Instance.new("ScrollingFrame", mf)
-    pTp.Size, pTp.Position, pTp.Visible = UDim2.new(1, -10, 1, -75), UDim2.new(0, 5, 0, 70), false
-    pTp.BackgroundTransparency, pTp.CanvasSize = 1, UDim2.new(0, 0, 0, 1000)
-    Instance.new("UIListLayout", pTp).HorizontalAlignment = "Center"
+    local StatusLabel = Instance.new("TextLabel", PageEvent)
+    StatusLabel.Size = UDim2.new(1, 0, 0, 30); StatusLabel.Position = UDim2.new(0, 0, 0, 10)
+    StatusLabel.Text = "SYSTEM READY"; StatusLabel.TextColor3 = Color3.new(1, 1, 1); StatusLabel.BackgroundTransparency = 1
 
-    -- CONTENT EVENT
-    local StatusLabel = Instance.new("TextLabel", pEv)
-    StatusLabel.Size, StatusLabel.Position, StatusLabel.Text = UDim2.new(1,0,0,20), UDim2.new(0,0,0,5), "READY"
-    StatusLabel.TextColor3, StatusLabel.BackgroundTransparency = Color3.new(1,1,1), 1
+    local TimeLabel = Instance.new("TextLabel", PageEvent)
+    TimeLabel.Size = UDim2.new(1, 0, 0, 20); TimeLabel.Position = UDim2.new(0, 0, 0, 40)
+    TimeLabel.Text = "00:00:00"; TimeLabel.TextColor3 = Color3.fromRGB(0, 255, 200); TimeLabel.BackgroundTransparency = 1
 
-    local TimeLabel = Instance.new("TextLabel", pEv)
-    TimeLabel.Size, TimeLabel.Position, TimeLabel.Text = UDim2.new(1,0,0,20), UDim2.new(0,0,0,25), "00:00"
-    TimeLabel.TextColor3, TimeLabel.BackgroundTransparency = Color3.fromRGB(0, 255, 200), 1
+    local ToggleBtn = Instance.new("TextButton", PageEvent)
+    ToggleBtn.Size = UDim2.new(1, 0, 0, 40); ToggleBtn.Position = UDim2.new(0, 0, 0, 70)
+    ToggleBtn.Text = "START SMART AUTO"; ToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    Instance.new("UICorner", ToggleBtn)
 
-    local tog = Instance.new("TextButton", pEv)
-    tog.Size, tog.Position, tog.Text = UDim2.new(0.9,0,0,35), UDim2.new(0.05,0,0,50), "START SMART AUTO"
-    tog.BackgroundColor3 = Color3.fromRGB(40,40,40)
-    tog.MouseButton1Click:Connect(function()
-        EventModule.Running = not EventModule.Running
-        tog.Text = EventModule.Running and "STOP AUTO" or "START SMART AUTO"
-        tog.BackgroundColor3 = EventModule.Running and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(40,40,40)
-    end)
+    -- HALAMAN TELEPORT (Data dari tp.lua)
+    local PageTp = Instance.new("ScrollingFrame", MainFrame)
+    PageTp.Size = UDim2.new(1, -10, 1, -85); PageTp.Position = UDim2.new(0, 5, 0, 80)
+    PageTp.BackgroundTransparency = 1; PageTp.Visible = false; PageTp.CanvasSize = UDim2.new(0, 0, 0, 800)
+    local layout = Instance.new("UIListLayout", PageTp); layout.HorizontalAlignment = "Center"; layout.Padding = UDim.new(0, 5)
 
-    -- CONTENT TELEPORT (Membangun List dari TeleportModule)
-    local function build()
-        for _,v in pairs(pTp:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+    -- Fungsi Membangun Menu Teleport
+    local function buildTp()
+        for _, v in pairs(PageTp:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
         for name, data in pairs(TeleportModule.ISLANDS) do
-            local b = Instance.new("TextButton", pTp)
-            b.Size, b.Text = UDim2.new(0, 160, 0, 30), name
-            b.BackgroundColor3 = Color3.fromRGB(40,40,40)
-            b.MouseButton1Click:Connect(function()
-                for _,v in pairs(pTp:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
-                local back = Instance.new("TextButton", pTp); back.Size, back.Text = UDim2.new(0,160,0,25), "BACK"; back.BackgroundColor3 = Color3.fromRGB(80,20,20)
-                back.MouseButton1Click:Connect(build)
-                for _,spot in pairs(data) do
-                    local sb = Instance.new("TextButton", pTp); sb.Size, sb.Text = UDim2.new(0,160,0,30), spot[1]
-                    sb.MouseButton1Click:Connect(function() TeleportModule.To(spot[2]) end)
+            local btn = Instance.new("TextButton", PageTp)
+            btn.Size = UDim2.new(0, 180, 0, 35); btn.Text = name; btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            Instance.new("UICorner", btn)
+            btn.MouseButton1Click:Connect(function()
+                for _, v in pairs(PageTp:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+                local back = Instance.new("TextButton", PageTp); back.Size = UDim2.new(0, 180, 0, 30); back.Text = "BACK"; back.BackgroundColor3 = Color3.fromRGB(100, 40, 40)
+                back.MouseButton1Click:Connect(buildTp)
+                for _, spot in pairs(data) do
+                    local sBtn = Instance.new("TextButton", PageTp); sBtn.Size = UDim2.new(0, 180, 0, 35); sBtn.Text = spot[1]
+                    sBtn.MouseButton1Click:Connect(function() TeleportModule.To(spot[2]) end)
                 end
             end)
         end
     end
-    build()
+    buildTp()
 
-    -- Tab Switch
-    tEv.MouseButton1Click:Connect(function() pEv.Visible, pTp.Visible = true, false end)
-    tTp.MouseButton1Click:Connect(function() pEv.Visible, pTp.Visible = false, true end)
+    -- LOGIKA TAB & TOGGLE
+    TabEvent.MouseButton1Click:Connect(function() PageEvent.Visible, PageTp.Visible = true, false end)
+    TabTp.MouseButton1Click:Connect(function() PageEvent.Visible, PageTp.Visible = false, true end)
 
-    EventModule.StartLoop(StatusLabel, TimeLabel, TeleportModule)
+    ToggleBtn.MouseButton1Click:Connect(function()
+        EventModule.Running = not EventModule.Running
+        ToggleBtn.Text = EventModule.Running and "STOP AUTO" or "START SMART AUTO"
+        ToggleBtn.BackgroundColor3 = EventModule.Running and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(40, 40, 40)
+    end)
+
+    -- Inisialisasi Loop
+    EventModule.StartLoop(StatusLabel, TimeLabel)
 end
 
 return UI
