@@ -1,15 +1,23 @@
 local ShopModule = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Gunakan pcall dan timeout agar tidak Infinite Yield
+-- Fungsi aman mencari Remote tanpa bikin UI stuck
 local function GetWeatherRemote()
-    local success, net = pcall(function()
-        return ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net
-    end)
-    
-    if success and net then
-        -- Tunggu hanya 5 detik, jika tidak ada jangan bikin stuck
-        return net:WaitForChild("RF/WeatherMachineVote", 5)
+    local netPath = ReplicatedStorage:FindFirstChild("Packages")
+    if netPath then
+        local index = netPath:FindFirstChild("_Index")
+        if index then
+            -- Cari sleitnick_net secara dinamis
+            for _, child in pairs(index:GetChildren()) do
+                if child.Name:find("sleitnick_net") then
+                    local net = child:FindFirstChild("net")
+                    if net then
+                        -- Tunggu maksimal 2 detik saja agar tidak Infinite Yield
+                        return net:WaitForChild("RF/WeatherMachineVote", 2)
+                    end
+                end
+            end
+        end
     end
     return nil
 end
@@ -24,15 +32,12 @@ function ShopModule.BuyWeather()
         if WeatherRF then
             pcall(function()
                 WeatherRF:InvokeServer(ShopModule.SelectedWeather)
-                print("✅ [Shop] Auto Bought Weather: " .. ShopModule.SelectedWeather)
             end)
-        else
-            warn("⚠️ [Shop] Weather Machine tidak ditemukan di server ini.")
         end
     end
 end
 
--- Loop pengecekan
+-- Loop berjalan di background agar tidak mengganggu loading UI
 task.spawn(function()
     while true do
         task.wait(10)
